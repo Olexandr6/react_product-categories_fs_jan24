@@ -2,35 +2,35 @@
 import React, { useState } from 'react';
 import './App.scss';
 
-import classNames from 'classnames';
+import cn from 'classnames';
 import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
 
-function getVisibleProducts(products, options) {
-  const {
-    userId,
-    query,
-  } = options;
+// function getVisibleProducts(products, options) {
+//   const {
+//     userId,
+//     query,
+//   } = options;
 
-  let preparedProducts = [...products];
+//   let preparedProducts = [...products];
 
-  if (userId) {
-    preparedProducts = preparedProducts.filter(
-      product => product.user.id === userId,
-    );
-  }
+//   if (userId) {
+//     preparedProducts = preparedProducts.filter(
+//       product => product.user.id === userId,
+//     );
+//   }
 
-  const normalizedQuery = query.trim().toLowerCase();
+//   const normalizedQuery = query.trim().toLowerCase();
 
-  if (normalizedQuery) {
-    preparedProducts = preparedProducts.filter(
-      product => product.name.toLowerCase().includes(normalizedQuery),
-    );
-  }
+//   if (normalizedQuery) {
+//     preparedProducts = preparedProducts.filter(
+//       product => product.name.toLowerCase().includes(normalizedQuery),
+//     );
+//   }
 
-  return preparedProducts;
-}
+//   return preparedProducts;
+// }
 
 const products = productsFromServer.map((product) => {
   const category = categoriesFromServer.find(
@@ -48,16 +48,54 @@ const products = productsFromServer.map((product) => {
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [query, setQuery] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
-  const visibleProducts = getVisibleProducts(products, {
-    userId: selectedUser?.id,
-    query,
-  });
+  const isCategorySelected = categoryId => selectedCategories.some(
+    category => category.id === categoryId,
+  );
 
   const resetFilters = () => {
     setSelectedUser(null);
     setQuery('');
+    setSelectedCategories([]);
   };
+
+  const toggleCategory = (category) => {
+    if (isCategorySelected(category.id)) {
+      setSelectedCategories(categories => ([
+        ...categories.filter(
+          selectedCategory => selectedCategory.id !== category.id,
+        ),
+      ]));
+
+      return;
+    }
+
+    setSelectedCategories(categories => ([
+      ...categories,
+      category,
+    ]));
+  };
+
+  let filteredProducts = [...products];
+
+  if (selectedUser) {
+    filteredProducts = products.filter(
+      product => product.user.id === selectedUser.id,
+    );
+  }
+
+  if (query) {
+    filteredProducts = filteredProducts.filter(
+      product => product.name.toLowerCase().includes(query.toLowerCase()),
+    );
+  }
+
+  if (selectedCategories.length !== 0) {
+    filteredProducts = filteredProducts.filter(
+      product => isCategorySelected(product.categoryId),
+    );
+  }
 
   return (
     <div className="section">
@@ -72,7 +110,7 @@ export const App = () => {
               <a
                 data-cy="FilterAllUsers"
                 href="#/"
-                className={classNames({
+                className={cn({
                   'is-active': selectedUser === null,
                 })}
                 onClick={() => setSelectedUser(null)}
@@ -85,7 +123,7 @@ export const App = () => {
                   key={user.id}
                   data-cy="FilterUser"
                   href="#/"
-                  className={classNames({
+                  className={cn({
                     'is-active': user.id === selectedUser?.id,
                   })}
                   onClick={() => setSelectedUser(user)}
@@ -128,41 +166,26 @@ export const App = () => {
               <a
                 href="#/"
                 data-cy="AllCategories"
-                className="button is-success mr-6 is-outlined"
+                className={cn('button is-success mr-6', {
+                  'is-outlined': selectedCategories.length,
+                })}
+                onClick={() => setSelectedCategories([])}
               >
                 All
               </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 1
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
-                Category 2
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 3
-              </a>
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1"
-                href="#/"
-              >
-                Category 4
-              </a>
+              {categoriesFromServer.map(category => (
+                <a
+                  key={category.id}
+                  data-cy="Category"
+                  className={cn('button mr-2 my-1', {
+                    'is-info': isCategorySelected(category.id),
+                  })}
+                  href="#/"
+                  onClick={() => toggleCategory(category)}
+                >
+                  {category.title}
+                </a>
+              ))}
             </div>
 
             <div className="panel-block">
@@ -179,7 +202,7 @@ export const App = () => {
         </div>
 
         <div className="box table-container">
-          {visibleProducts.length === 0
+          {filteredProducts.length === 0
             ? (
               <p data-cy="NoMatchingMessage">
                 No products matching selected criteria
@@ -246,7 +269,7 @@ export const App = () => {
                 </thead>
 
                 <tbody>
-                  {visibleProducts.map(product => (
+                  {filteredProducts.map(product => (
                     <tr data-cy="Product" key={product.id}>
                       <td className="has-text-weight-bold" data-cy="ProductId">
                         {product.id}
@@ -257,7 +280,7 @@ export const App = () => {
 
                       <td
                         data-cy="ProductUser"
-                        className={classNames({
+                        className={cn({
                           'has-text-link': product.user.sex === 'm',
                           'has-text-danger': product.user.sex === 'f',
                         })}
