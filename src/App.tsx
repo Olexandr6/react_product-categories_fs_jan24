@@ -19,20 +19,13 @@ const products: Product[] = productsFromServer.map((product) => {
   return { ...product, category, user };
 });
 
-// {
-//   id: 1,
-//   title: 'Grocery',
-//   icon: '🍞',
-//   ownerId: 2,
-// },
-
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [query, setQuery] = useState('');
   const [
     selectedCategoriesIDs,
     setSelectedCategoriesIDs,
-  ] = useState<number[]>([]); // [3]
+  ] = useState<number[]>([]);
 
   const resetFilters = () => {
     setSelectedUser(null);
