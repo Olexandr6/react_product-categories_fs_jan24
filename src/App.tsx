@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import cn from 'classnames';
 
 import './App.scss';
@@ -7,19 +7,39 @@ import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
 
-const products = productsFromServer.map((product) => {
-  const category = categoriesFromServer.find(
-    cat => cat.id === product.categoryId,
-  );
-  const user = usersFromServer.find(
-    usr => usr.id === category.ownerId,
-  ); // find by category.ownerId
+interface Category {
+  id: number;
+  title: string;
+  icon: string;
+  ownerId: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  sex: string;
+}
+
+interface Product {
+  category: Category;
+  user: User | null;
+  id: number;
+  name: string;
+  categoryId: number;
+}
+
+const products: Product[] = productsFromServer.map((product) => {
+  const category = categoriesFromServer
+    .find(cat => cat.id === product.categoryId) as Category;
+
+  const user: User | null = usersFromServer
+    .find(usr => usr?.id === category.ownerId) || null;
 
   return { ...product, category, user };
 });
 
 export const App = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [query, setQuery] = useState('');
 
   const resetFilters = () => {
@@ -31,7 +51,7 @@ export const App = () => {
 
   if (selectedUser) {
     filteredProducts = products.filter(
-      product => product.user.id === selectedUser.id,
+      product => product.user?.id === selectedUser.id, // product.user && product.user?.id
     );
   }
 
@@ -177,7 +197,7 @@ export const App = () => {
                       <span className="is-flex is-flex-wrap-nowrap">
                         ID
 
-                        <a href="#/">
+                        <a href="#/" aria-label="sorting icon">
                           <span className="icon">
                             <i data-cy="SortIcon" className="fas fa-sort" />
                           </span>
@@ -189,7 +209,7 @@ export const App = () => {
                       <span className="is-flex is-flex-wrap-nowrap">
                         Product
 
-                        <a href="#/">
+                        <a href="#/" aria-label="sorting icon">
                           <span className="icon">
                             <i
                               data-cy="SortIcon"
@@ -204,7 +224,7 @@ export const App = () => {
                       <span className="is-flex is-flex-wrap-nowrap">
                         Category
 
-                        <a href="#/">
+                        <a href="#/" aria-label="sorting icon">
                           <span className="icon">
                             <i data-cy="SortIcon" className="fas fa-sort-up" />
                           </span>
@@ -216,7 +236,7 @@ export const App = () => {
                       <span className="is-flex is-flex-wrap-nowrap">
                         User
 
-                        <a href="#/">
+                        <a href="#/" aria-label="sorting icon">
                           <span className="icon">
                             <i data-cy="SortIcon" className="fas fa-sort" />
                           </span>
@@ -241,11 +261,11 @@ export const App = () => {
                       <td
                         data-cy="ProductUser"
                         className={cn({
-                          'has-text-link': user.sex === 'm',
-                          'has-text-danger': user.sex === 'f',
+                          'has-text-link': user?.sex === 'm',
+                          'has-text-danger': user?.sex === 'f',
                         })}
                       >
-                        {user.name}
+                        {user?.name}
                       </td>
                     </tr>
                   ))}
