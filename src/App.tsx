@@ -6,27 +6,8 @@ import './App.scss';
 import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
-
-interface Category {
-  id: number;
-  title: string;
-  icon: string;
-  ownerId: number;
-}
-
-interface User {
-  id: number;
-  name: string;
-  sex: string;
-}
-
-interface Product {
-  category: Category;
-  user: User | null;
-  id: number;
-  name: string;
-  categoryId: number;
-}
+import { Category, User, Product } from './types';
+import { PeopleTable } from './components/PeopleTable';
 
 const products: Product[] = productsFromServer.map((product) => {
   const category = categoriesFromServer
@@ -187,92 +168,8 @@ export const App = () => {
             </p>
           )
             : (
-              <table
-                data-cy="ProductTable"
-                className="table is-striped is-narrow is-fullwidth"
-              >
-                <thead>
-                  <tr>
-                    <th>
-                      <span className="is-flex is-flex-wrap-nowrap">
-                        ID
-
-                        <a href="#/" aria-label="sorting icon">
-                          <span className="icon">
-                            <i data-cy="SortIcon" className="fas fa-sort" />
-                          </span>
-                        </a>
-                      </span>
-                    </th>
-
-                    <th>
-                      <span className="is-flex is-flex-wrap-nowrap">
-                        Product
-
-                        <a href="#/" aria-label="sorting icon">
-                          <span className="icon">
-                            <i
-                              data-cy="SortIcon"
-                              className="fas fa-sort-down"
-                            />
-                          </span>
-                        </a>
-                      </span>
-                    </th>
-
-                    <th>
-                      <span className="is-flex is-flex-wrap-nowrap">
-                        Category
-
-                        <a href="#/" aria-label="sorting icon">
-                          <span className="icon">
-                            <i data-cy="SortIcon" className="fas fa-sort-up" />
-                          </span>
-                        </a>
-                      </span>
-                    </th>
-
-                    <th>
-                      <span className="is-flex is-flex-wrap-nowrap">
-                        User
-
-                        <a href="#/" aria-label="sorting icon">
-                          <span className="icon">
-                            <i data-cy="SortIcon" className="fas fa-sort" />
-                          </span>
-                        </a>
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredProducts.map(({ category, user, ...product }) => (
-                    <tr data-cy="Product" key={product.id}>
-                      <td className="has-text-weight-bold" data-cy="ProductId">
-                        {product.id}
-                      </td>
-
-                      <td data-cy="ProductName">{product.name}</td>
-                      <td data-cy="ProductCategory">
-                        {`${category.icon} - ${category.title}`}
-                      </td>
-
-                      <td
-                        data-cy="ProductUser"
-                        className={cn({
-                          'has-text-link': user?.sex === 'm',
-                          'has-text-danger': user?.sex === 'f',
-                        })}
-                      >
-                        {user?.name}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <PeopleTable products={filteredProducts} />
             )}
-
         </div>
       </div>
     </div>
