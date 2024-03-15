@@ -1,93 +1,147 @@
 import cn from 'classnames';
+import { useState } from 'react';
 import { Product } from '../types';
+import { SortLink } from './SortLink';
 
 interface Props {
   products: Product[];
 }
 
-export const PeopleTable: React.FC<Props> = ({ products }) => (
-  <table
-    data-cy="ProductTable"
-    className="table is-striped is-narrow is-fullwidth"
-  >
-    <thead>
-      <tr>
-        <th>
-          <span className="is-flex is-flex-wrap-nowrap">
-            {}
+export const PeopleTable: React.FC<Props> = ({ products }) => {
+  const [sortColumn, setSortColumn] = useState('');
+  const [isReversed, setIsReversed] = useState(false);
 
-            <a href="#/" aria-label="sorting icon">
-              <span className="icon">
-                <i data-cy="SortIcon" className="fas fa-sort" />
-              </span>
-            </a>
-          </span>
-        </th>
+  const preparedProducts = [...products];
 
-        <th>
-          <span className="is-flex is-flex-wrap-nowrap">
-            Product
+  const sortBy = (column: string) => {
+    const firstClick = column !== sortColumn;
+    const secondClick = column === sortColumn && !isReversed;
+    const thirdClick = column === sortColumn && isReversed;
 
-            <a href="#/" aria-label="sorting icon">
-              <span className="icon">
-                <i
-                  data-cy="SortIcon"
-                  className="fas fa-sort-down"
-                />
-              </span>
-            </a>
-          </span>
-        </th>
+    if (firstClick) {
+      setSortColumn(column);
+      setIsReversed(false);
+    }
 
-        <th>
-          <span className="is-flex is-flex-wrap-nowrap">
-            Category
+    if (secondClick) {
+      setIsReversed(true);
+    }
 
-            <a href="#/" aria-label="sorting icon">
-              <span className="icon">
-                <i data-cy="SortIcon" className="fas fa-sort-up" />
-              </span>
-            </a>
-          </span>
-        </th>
+    if (thirdClick) {
+      setSortColumn('');
+      setIsReversed(false);
+    }
+  };
 
-        <th>
-          <span className="is-flex is-flex-wrap-nowrap">
-            User
+  if (sortColumn) {
+    preparedProducts.sort((productA, productB) => {
+      switch (sortColumn) {
+        case 'ID':
+          return productA.id - productB.id;
+        case 'Product':
+          return productA.name.localeCompare(productB.name);
+        case 'Category':
+          return productA.category.title
+            .localeCompare(productB.category.title);
+        case 'User': {
+          if (productA.user && productB.user) {
+            return productA.user.name.localeCompare(productB.user.name);
+          }
 
-            <a href="#/" aria-label="sorting icon">
-              <span className="icon">
-                <i data-cy="SortIcon" className="fas fa-sort" />
-              </span>
-            </a>
-          </span>
-        </th>
-      </tr>
-    </thead>
+          return 0;
+        }
 
-    <tbody>
-      {products.map(({ category, user, ...product }) => (
-        <tr data-cy="Product" key={product.id}>
-          <td className="has-text-weight-bold" data-cy="ProductId">
-            {product.id}
-          </td>
+        default:
+          return 0;
+      }
+    });
+  }
 
-          <td data-cy="ProductName">{product.name}</td>
-          <td data-cy="ProductCategory">
-            {`${category.icon} - ${category.title}`}
-          </td>
+  if (isReversed) {
+    preparedProducts.reverse();
+  }
 
-          <td
-            data-cy="ProductUser"
-            className={cn({
-              'has-text-link': user?.sex === 'm',
-              'has-text-danger': user?.sex === 'f',
-            })}
-          >
-            {user?.name}
-          </td>
+  return (
+    <table
+      data-cy="ProductTable"
+      className="table is-striped is-narrow is-fullwidth"
+    >
+      <thead>
+        <tr>
+          <th>
+            <span className="is-flex is-flex-wrap-nowrap">
+              ID
+
+              <SortLink
+                isActive={sortColumn === 'ID'}
+                isReversed={isReversed}
+                onClick={() => sortBy('ID')}
+              />
+            </span>
+          </th>
+
+          <th>
+            <span className="is-flex is-flex-wrap-nowrap">
+              Product
+
+              <SortLink
+                isActive={sortColumn === 'Product'}
+                isReversed={isReversed}
+                onClick={() => sortBy('Product')}
+              />
+            </span>
+          </th>
+
+          <th>
+            <span className="is-flex is-flex-wrap-nowrap">
+              Category
+
+              <SortLink
+                isActive={sortColumn === 'Category'}
+                isReversed={isReversed}
+                onClick={() => sortBy('Category')}
+              />
+            </span>
+          </th>
+
+          <th>
+            <span className="is-flex is-flex-wrap-nowrap">
+              User
+
+              <SortLink
+                isActive={sortColumn === 'User'}
+                isReversed={isReversed}
+                onClick={() => sortBy('User')}
+              />
+            </span>
+          </th>
         </tr>
-      ))}
-    </tbody>
-  </table>
-);
+      </thead>
+
+      <tbody>
+        {preparedProducts.map(({ category, user, ...product }) => (
+          <tr data-cy="Product" key={product.id}>
+            <td className="has-text-weight-bold" data-cy="ProductId">
+              {product.id}
+            </td>
+
+            <td data-cy="ProductName">{product.name}</td>
+            <td data-cy="ProductCategory">
+              {`${category.icon} - ${category.title}`}
+            </td>
+
+            <td
+              data-cy="ProductUser"
+              className={cn({
+                'has-text-link': user?.sex === 'm',
+                'has-text-danger': user?.sex === 'f',
+              })}
+            >
+              {user?.name}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+};

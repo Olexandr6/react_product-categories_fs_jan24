@@ -30,6 +30,7 @@ export const App = () => {
 
   let filteredProducts = [...products];
 
+  // #region Filters
   if (selectedUser) {
     filteredProducts = products.filter(
       product => product.user?.id === selectedUser.id, // product.user && product.user?.id
@@ -41,6 +42,7 @@ export const App = () => {
       product => product.name.toLowerCase().includes(query.toLowerCase()),
     );
   }
+  // #endregion
 
   return (
     <div className="section">
